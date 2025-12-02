@@ -1,0 +1,45 @@
+name: Deploy proxy (nginx-proxy + letsencrypt) to VPS
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: 🛎️ Checkout repository
+        uses: actions/checkout@v3
+
+      - name: 📂 Upload proxy stack to VPS
+        uses: appleboy/scp-action@v0.1.3
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          source: "."          # everything in this repo (docker-compose.yml, nginx-vhost, etc.)
+          target: "/home/${{ secrets.VPS_USER }}/proxy"
+
+      - name: 🐳 Deploy proxy stack
+        uses: appleboy/ssh-action@v0.1.8
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          script: |
+            cd /home/${{ secrets.VPS_USER }}/proxy
+
+            echo "🛠 Ensure nginx-proxy network exists..."
+            if ! docker network ls --format '{{.Name}}' | grep -qw nginx-proxy; then
+              docker network create nginx-proxy
+            else
+              echo "✅ nginx-proxy network already exists"
+            fi
+
+            echo "🐳 Stopping old proxy containers..."
+            docker compose down --remove-orphans || true
+
+            echo "🚀 Starting proxy containers..."
+            docker compose up -d
