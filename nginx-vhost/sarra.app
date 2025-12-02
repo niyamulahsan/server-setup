@@ -1,0 +1,21 @@
+client_max_body_size 100m;
+
+location /app {
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header Scheme $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_pass http://sarra-app:6001;
+}
+
+location /apps {
+    proxy_http_version 1.1;
+    proxy_set_header Host $http_host;
+    proxy_set_header Scheme $scheme;
+    proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+    proxy_set_header Upgrade $http_upgrade;
+    proxy_set_header Connection "Upgrade";
+    proxy_pass http://sarra-app:6001;
+}
