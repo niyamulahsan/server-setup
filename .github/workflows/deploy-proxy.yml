@@ -19,7 +19,7 @@ jobs:
           host: ${{ secrets.VPS_HOST }}
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
-          source: "."          # everything in this repo (docker-compose.yml, nginx-vhost, etc.)
+          source: "."
           target: "/home/${{ secrets.VPS_USER }}/proxy"
 
       - name: 🐳 Deploy proxy stack
@@ -29,17 +29,17 @@ jobs:
           username: ${{ secrets.VPS_USER }}
           key: ${{ secrets.VPS_SSH_KEY }}
           script: |
+            set -e
             cd /home/${{ secrets.VPS_USER }}/proxy
 
             echo "🛠 Ensure nginx-proxy network exists..."
-            if ! docker network ls --format '{{.Name}}' | grep -qw nginx-proxy; then
-              docker network create nginx-proxy
-            else
-              echo "✅ nginx-proxy network already exists"
-            fi
+            docker network ls --format '{{.Name}}' | grep -qw nginx-proxy || docker network create nginx-proxy
 
-            echo "🐳 Stopping old proxy containers..."
+            echo "🛠 Ensure infra network exists..."
+            docker network ls --format '{{.Name}}' | grep -qw infra || docker network create infra
+
+            echo "🐳 Stopping old containers..."
             docker compose down --remove-orphans || true
 
-            echo "🚀 Starting proxy containers..."
-            docker compose up -d
+            echo "🚀 Starting containers..."
+            docker compose up -d --build
