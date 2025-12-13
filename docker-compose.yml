@@ -34,12 +34,55 @@ services:
     networks:
       - nginx-proxy
 
+  mysql:
+    image: mysql:8.0
+    container_name: mysql-global
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - mysql_global_data:/var/lib/mysql
+    networks:
+      - infra
+
+  redis:
+    image: redis:alpine
+    container_name: redis-global
+    restart: unless-stopped
+    volumes:
+      - redis_global_data:/data
+      - ./redis/redis.conf:/usr/local/etc/redis/redis.conf:ro
+    command: ["redis-server", "/usr/local/etc/redis/redis.conf"]
+    networks:
+      - infra
+
+  phpmyadmin:
+    image: phpmyadmin/phpmyadmin
+    container_name: phpmyadmin
+    restart: unless-stopped
+    environment:
+      PMA_HOST: mysql-global
+      PMA_PORT: 3306
+      PMA_ARBITRARY: 1
+      VIRTUAL_HOST: pma.vatmate.org,pma.sarra.app,pma.old.vatmate.org
+      VIRTUAL_PORT: 80
+      LETSENCRYPT_HOST: pma.vatmate.org,pma.sarra.app,pma.old.vatmate.org
+      LETSENCRYPT_EMAIL: niyamulahsan@gmail.com
+    networks:
+      - infra
+      - nginx-proxy
+
 volumes:
   certs:
   html:
   acme:
+  mysql_global_data:
+  redis_global_data:
 
 networks:
   nginx-proxy:
     external: true
     name: nginx-proxy
+  infra:
+    external: true
+    name: infra
