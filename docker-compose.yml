@@ -56,10 +56,13 @@ services:
     networks:
       - infra
 
+  # phpMyAdmin: domain + port
   phpmyadmin:
     image: phpmyadmin/phpmyadmin
     container_name: phpmyadmin
     restart: unless-stopped
+    ports:
+      - "8080:80"
     environment:
       PMA_HOST: mysql-global
       PMA_PORT: 3306
@@ -72,12 +75,48 @@ services:
       - infra
       - nginx-proxy
 
+  # PostgreSQL: global, INTERNAL ONLY (no ports exposed)
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres-global
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: ${POSTGRES_USER}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD}
+      POSTGRES_DB: ${POSTGRES_DB}
+    volumes:
+      - postgres_global_data:/var/lib/postgresql/data
+    networks:
+      - infra
+
+  # pgAdmin: domain + port
+  pgadmin:
+    image: dpage/pgadmin4:latest
+    container_name: pgadmin
+    restart: unless-stopped
+    depends_on:
+      - postgres
+    ports:
+      - "5050:80"
+    environment:
+      PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
+      PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
+      PGADMIN_CONFIG_SERVER_MODE: "True"
+      VIRTUAL_HOST: pga.vatmate.org
+      VIRTUAL_PORT: 80
+      LETSENCRYPT_HOST: pga.vatmate.org
+      LETSENCRYPT_EMAIL: niyamulahsan@gmail.com
+    volumes:
+      - pgadmin_data:/var/lib/pgadmin
+    networks:
+      - infra
+      - nginx-proxy
+
 volumes:
-  certs:
-  html:
-  acme:
   mysql_global_data:
   redis_global_data:
+  postgres_global_data:
+  pgadmin_data:
 
 networks:
   nginx-proxy:
