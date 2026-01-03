@@ -102,9 +102,9 @@ services:
       PGADMIN_DEFAULT_EMAIL: ${PGADMIN_EMAIL}
       PGADMIN_DEFAULT_PASSWORD: ${PGADMIN_PASSWORD}
       PGADMIN_CONFIG_SERVER_MODE: "True"
-      VIRTUAL_HOST: pga.vatmate.org
+      VIRTUAL_HOST: pga.vatmate.org,pga.sarra.app
       VIRTUAL_PORT: 80
-      LETSENCRYPT_HOST: pga.vatmate.org
+      LETSENCRYPT_HOST: pga.vatmate.org,pga.sarra.app
       LETSENCRYPT_EMAIL: niyamulahsan@gmail.com
     volumes:
       - pgadmin_data:/var/lib/pgadmin
